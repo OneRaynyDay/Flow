@@ -1,0 +1,559 @@
+{
+    "items": [
+        {
+            "owner": {
+                "reputation": 145358,
+                "user_id": 1427416,
+                "user_type": "registered",
+                "accept_rate": 56,
+                "profile_image": "https://i.stack.imgur.com/QWHKg.png?s=128&g=1",
+                "display_name": "BrenBarn",
+                "link": "https://stackoverflow.com/users/1427416/brenbarn"
+            },
+            "is_accepted": false,
+            "score": 508,
+            "last_activity_date": 1470422860,
+            "last_edit_date": 1470422860,
+            "creation_date": 1342600011,
+            "answer_id": 11537218,
+            "question_id": 11536764,
+            "body": "<p>To elaborate on @Ignacio's answer:</p>\n\n<p>The Python import mechanism works relative to the <code>__name__</code> of the current file.  When you execute a file directly, it doesn't have its usual name, but has <code>\"__main__\"</code> as its name instead.  So relative imports don't work.</p>\n\n<p>You can, as Igancio suggested, execute it using the <code>-m</code> option.  If you have a part of your package that is meant to be run as a script, you can also use the <code>__package__</code> attribute to tell that file what name it's supposed to have in the package hierarchy. </p>\n\n<p>See <a href=\"http://www.python.org/dev/peps/pep-0366/\" rel=\"noreferrer\">http://www.python.org/dev/peps/pep-0366/</a> for details.</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 51489,
+                "user_id": 953482,
+                "user_type": "registered",
+                "accept_rate": 92,
+                "profile_image": "https://i.stack.imgur.com/T3HH6.png?s=128&g=1",
+                "display_name": "Kevin",
+                "link": "https://stackoverflow.com/users/953482/kevin"
+            },
+            "is_accepted": true,
+            "community_owned_date": 1398432707,
+            "score": 444,
+            "last_activity_date": 1521135430,
+            "last_edit_date": 1521135430,
+            "creation_date": 1398432707,
+            "answer_id": 23294659,
+            "question_id": 23294658,
+            "body": "<p>The simplest way to accomplish this would be to put the <code>input</code> method in a while loop. Use <a href=\"https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops\" rel=\"noreferrer\"><code>continue</code></a> when you get bad input, and <code>break</code> out of the loop when you're satisfied.</p>\n\n<h2>When Your Input Might Raise an Exception</h2>\n\n<p>Use <a href=\"https://docs.python.org/3/tutorial/errors.html#handling-exceptions\" rel=\"noreferrer\">try and catch</a> to detect when the user enters data that can't be parsed.</p>\n\n<pre><code>while True:\n    try:\n        # Note: Python 2.x users should use raw_input, the equivalent of 3.x's input\n        age = int(input(\"Please enter your age: \"))\n    except ValueError:\n        print(\"Sorry, I didn't understand that.\")\n        #better try again... Return to the start of the loop\n        continue\n    else:\n        #age was successfully parsed!\n        #we're ready to exit the loop.\n        break\nif age &gt;= 18: \n    print(\"You are able to vote in the United States!\")\nelse:\n    print(\"You are not able to vote in the United States.\")\n</code></pre>\n\n<h2>Implementing Your Own Validation Rules</h2>\n\n<p>If you want to reject values that Python can successfully parse, you can add your own validation logic.</p>\n\n<pre><code>while True:\n    data = input(\"Please enter a loud message (must be all caps): \")\n    if not data.isupper():\n        print(\"Sorry, your response was not loud enough.\")\n        continue\n    else:\n        #we're happy with the value given.\n        #we're ready to exit the loop.\n        break\n\nwhile True:\n    data = input(\"Pick an answer from A to D:\")\n    if data.lower() not in ('a', 'b', 'c', 'd'):\n        print(\"Not an appropriate choice.\")\n    else:\n        break\n</code></pre>\n\n<h2>Combining Exception Handling and Custom Validation</h2>\n\n<p>Both of the above techniques can be combined into one loop.</p>\n\n<pre><code>while True:\n    try:\n        age = int(input(\"Please enter your age: \"))\n    except ValueError:\n        print(\"Sorry, I didn't understand that.\")\n        continue\n\n    if age &lt; 0:\n        print(\"Sorry, your response must not be negative.\")\n        continue\n    else:\n        #age was successfully parsed, and we're happy with its value.\n        #we're ready to exit the loop.\n        break\nif age &gt;= 18: \n    print(\"You are able to vote in the United States!\")\nelse:\n    print(\"You are not able to vote in the United States.\")\n</code></pre>\n\n<h2>Encapsulating it All in a Function</h2>\n\n<p>If you need to ask your user for a lot of different values, it might be useful to put this code in a function, so you don't have to retype it every time.</p>\n\n<pre><code>def get_non_negative_int(prompt):\n    while True:\n        try:\n            value = int(input(prompt))\n        except ValueError:\n            print(\"Sorry, I didn't understand that.\")\n            continue\n\n        if value &lt; 0:\n            print(\"Sorry, your response must not be negative.\")\n            continue\n        else:\n            break\n    return value\n\nage = get_non_negative_int(\"Please enter your age: \")\nkids = get_non_negative_int(\"Please enter the number of children you have: \")\nsalary = get_non_negative_int(\"Please enter your yearly earnings, in dollars: \")\n</code></pre>\n\n<h3>Putting It All Together</h3>\n\n<p>You can extend this idea to make a very generic input function:</p>\n\n<pre><code>def sanitised_input(prompt, type_=None, min_=None, max_=None, range_=None):\n    if min_ is not None and max_ is not None and max_ &lt; min_:\n        raise ValueError(\"min_ must be less than or equal to max_.\")\n    while True:\n        ui = input(prompt)\n        if type_ is not None:\n            try:\n                ui = type_(ui)\n            except ValueError:\n                print(\"Input type must be {0}.\".format(type_.__name__))\n                continue\n        if max_ is not None and ui &gt; max_:\n            print(\"Input must be less than or equal to {0}.\".format(max_))\n        elif min_ is not None and ui &lt; min_:\n            print(\"Input must be greater than or equal to {0}.\".format(min_))\n        elif range_ is not None and ui not in range_:\n            if isinstance(range_, range):\n                template = \"Input must be between {0.start} and {0.stop}.\"\n                print(template.format(range_))\n            else:\n                template = \"Input must be {0}.\"\n                if len(range_) == 1:\n                    print(template.format(*range_))\n                else:\n                    print(template.format(\" or \".join((\", \".join(map(str,\n                                                                     range_[:-1])),\n                                                       str(range_[-1])))))\n        else:\n            return ui\n</code></pre>\n\n<p>With usage such as:</p>\n\n<pre><code>age = sanitised_input(\"Enter your age: \", int, 1, 101)\nanswer = sanitised_input(\"Enter your answer: \", str.lower, range_=('a', 'b', 'c', 'd'))\n</code></pre>\n\n<h2>Common Pitfalls, and Why you Should Avoid Them</h2>\n\n<h3>The Redundant Use of Redundant <code>input</code> Statements</h3>\n\n<p>This method works but is generally considered poor style:</p>\n\n<pre><code>data = input(\"Please enter a loud message (must be all caps): \")\nwhile not data.isupper():\n    print(\"Sorry, your response was not loud enough.\")\n    data = input(\"Please enter a loud message (must be all caps): \")\n</code></pre>\n\n<p>It might look attractive initially because it's shorter than the <code>while True</code> method, but it violates the <a href=\"http://en.wikipedia.org/wiki/Don%27t_repeat_yourself\" rel=\"noreferrer\">Don't Repeat Yourself</a> principle of software development. This increases the likelihood of bugs in your system. What if you want to backport to 2.7 by changing <code>input</code> to <code>raw_input</code>, but accidentally change only the first <code>input</code> above? It's a <code>SyntaxError</code> just waiting to happen.</p>\n\n<h3>Recursion Will Blow Your Stack</h3>\n\n<p>If you've just learned about recursion, you might be tempted to use it in <code>get_non_negative_int</code> so you can dispose of the while loop.</p>\n\n<pre><code>def get_non_negative_int(prompt):\n    try:\n        value = int(input(prompt))\n    except ValueError:\n        print(\"Sorry, I didn't understand that.\")\n        return get_non_negative_int(prompt)\n\n    if value &lt; 0:\n        print(\"Sorry, your response must not be negative.\")\n        return get_non_negative_int(prompt)\n    else:\n        return value\n</code></pre>\n\n<p>This appears to work fine most of the time, but if the user enters invalid data enough times, the script will terminate with a <code>RuntimeError: maximum recursion depth exceeded</code>. You may think \"no fool would make 1000 mistakes in a row\", but you're underestimating the ingenuity of fools!</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 492494,
+                "user_id": 190597,
+                "user_type": "registered",
+                "accept_rate": 88,
+                "profile_image": "https://www.gravatar.com/avatar/aabc98d5c6482ca0e1405ec97710f30a?s=128&d=identicon&r=PG&f=1",
+                "display_name": "unutbu",
+                "link": "https://stackoverflow.com/users/190597/unutbu"
+            },
+            "is_accepted": true,
+            "score": 374,
+            "last_activity_date": 1396925223,
+            "last_edit_date": 1396925223,
+            "creation_date": 1313413432,
+            "answer_id": 7065242,
+            "question_id": 7065164,
+            "body": "<p>In general, to make a naive datetime timezone-aware, use the <a href=\"http://pytz.sourceforge.net/#localized-times-and-date-arithmetic\" rel=\"noreferrer\">localize method</a>:</p>\n\n<pre><code>import datetime\nimport pytz\n\nunaware = datetime.datetime(2011, 8, 15, 8, 15, 12, 0)\naware = datetime.datetime(2011, 8, 15, 8, 15, 12, 0, pytz.UTC)\n\nnow_aware = pytz.utc.localize(unaware)\nassert aware == now_aware\n</code></pre>\n\n<p>For the UTC timezone, it is not really necessary to use <code>localize</code> since there is no daylight savings time calculation to handle:</p>\n\n<pre><code>now_aware = unaware.replace(tzinfo=pytz.UTC)\n</code></pre>\n\n<p>works. (<code>.replace</code> returns a new datetime; it does not modify <code>unaware</code>.)</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 535521,
+                "user_id": 20862,
+                "user_type": "registered",
+                "accept_rate": 50,
+                "profile_image": "https://www.gravatar.com/avatar/2343ae368d3241278581ce6c87f62a25?s=128&d=identicon&r=PG",
+                "display_name": "Ignacio Vazquez-Abrams",
+                "link": "https://stackoverflow.com/users/20862/ignacio-vazquez-abrams"
+            },
+            "is_accepted": true,
+            "score": 351,
+            "last_activity_date": 1342598464,
+            "creation_date": 1342598464,
+            "answer_id": 11536794,
+            "question_id": 11536764,
+            "body": "<p>Yes. You're not using it as a package.</p>\n\n<pre><code>python -m pkg.tests.core_test\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 4839,
+                "user_id": 1255748,
+                "user_type": "registered",
+                "accept_rate": 100,
+                "profile_image": "https://www.gravatar.com/avatar/dfea3267368342bafad65ca0bd3db246?s=128&d=identicon&r=PG",
+                "display_name": "Thane Brimhall",
+                "link": "https://stackoverflow.com/users/1255748/thane-brimhall"
+            },
+            "is_accepted": false,
+            "score": 256,
+            "last_activity_date": 1393631146,
+            "last_edit_date": 1393631146,
+            "creation_date": 1383085068,
+            "answer_id": 19670235,
+            "question_id": 17610732,
+            "body": "<p>Just ran into this problem. I don't know if it's the same thing that hit your code, but for me the root cause was because I forgot to put <code>name=</code> on the last argument of the <code>url</code> function call.</p>\n\n<p>For instance, the following throws the error from the question:</p>\n\n<pre><code>url(r'^foo/(?P&lt;bar&gt;[A-Za-z]+)/$', FooBar.as_view(), 'foo')\n</code></pre>\n\n<p>But this actually works:</p>\n\n<pre><code>url(r'^foo/(?P&lt;bar&gt;[A-Za-z]+)/$', FooBar.as_view(), name='foo')\n</code></pre>\n\n<p>The reason why the traceback is unhelpful is because internally, Django wants to parse the given <em>positional</em> argument as the <em>keyword</em> argument <code>kwargs</code>, and since a string is an iterable, an atypical code path begins to unfold. Always use <code>name=</code> on your urls!</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 1839,
+                "user_id": 425740,
+                "user_type": "registered",
+                "profile_image": "https://www.gravatar.com/avatar/1549fa258ed3a3d401cedf5a576ddc0e?s=128&d=identicon&r=PG",
+                "display_name": "ihm",
+                "link": "https://stackoverflow.com/users/425740/ihm"
+            },
+            "is_accepted": false,
+            "score": 178,
+            "last_activity_date": 1456170269,
+            "last_edit_date": 1456170269,
+            "creation_date": 1380920402,
+            "answer_id": 19190695,
+            "question_id": 11536764,
+            "body": "<p>You can use <code>import components.core</code> directly if you append the current directory to <code>sys.path</code>:</p>\n\n<pre><code>if __name__ == '__main__' and __package__ is None:\n    from os import sys, path\n    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 11850,
+                "user_id": 665575,
+                "user_type": "registered",
+                "profile_image": "https://www.gravatar.com/avatar/5b71ac3add821b6699ffe23dc7a592c1?s=128&d=identicon&r=PG",
+                "display_name": "tom",
+                "link": "https://stackoverflow.com/users/665575/tom"
+            },
+            "is_accepted": true,
+            "score": 147,
+            "last_activity_date": 1361273625,
+            "creation_date": 1361273625,
+            "answer_id": 14956465,
+            "question_id": 14899506,
+            "body": "<p>I've found that the <code>simplejson</code> module gives more descriptive errors in many cases where the built-in <code>json</code> module is vague. For instance, for the case of having a comma after the last item in a list:</p>\n\n<pre><code>json.loads('[1,2,]')\n....\nValueError: No JSON object could be decoded\n</code></pre>\n\n<p>which is not very descriptive. The same operation with <code>simplejson</code>:</p>\n\n<pre><code>simplejson.loads('[1,2,]')\n...\nsimplejson.decoder.JSONDecodeError: Expecting object: line 1 column 5 (char 5)\n</code></pre>\n\n<p>Much better! Likewise for other common errors like capitalizing <code>True</code>.</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 88808,
+                "user_id": 78845,
+                "user_type": "registered",
+                "profile_image": "https://www.gravatar.com/avatar/9d2da976eb1e7a1c22ad46adfdb68632?s=128&d=identicon&r=PG",
+                "display_name": "Johnsyweb",
+                "link": "https://stackoverflow.com/users/78845/johnsyweb"
+            },
+            "is_accepted": true,
+            "score": 146,
+            "last_activity_date": 1417423906,
+            "last_edit_date": 1495539206,
+            "creation_date": 1313273471,
+            "answer_id": 7053615,
+            "question_id": 7053551,
+            "body": "<p><code>self.materials</code> is a <a href=\"http://www.python.org/doc//current/library/stdtypes.html#mapping-types-dict\" rel=\"noreferrer\"><code>dict</code></a> and by default you are iterating over just the keys (which are strings).</p>\n\n<p>Since <code>self.materials</code> has more than two keys<a href=\"https://stackoverflow.com/questions/7053551/python-valueerror-too-many-values-to-unpack/7053615#comment34696354_7053615\">*</a>, they can't be unpacked into the <a href=\"http://www.python.org/doc//current/library/functions.html#tuple\" rel=\"noreferrer\"><code>tuple</code></a> \"<code>k, m</code>\", hence the <a href=\"http://docs.python.org/2/library/exceptions.html#exceptions.ValueError\" rel=\"noreferrer\"><code>ValueError</code></a> <a href=\"http://docs.python.org/2/library/exceptions.html\" rel=\"noreferrer\">exception</a> is raised.</p>\n\n<p>In Python 2.<em>x</em>, to iterate over the keys and the values (the <a href=\"http://www.python.org/doc//current/library/functions.html#tuple\" rel=\"noreferrer\"><code>tuple</code></a> \"<code>k, m</code>\"), we use <a href=\"http://www.python.org/doc//current/library/stdtypes.html#dict.iteritems\" rel=\"noreferrer\"><code>self.materials.iteritems()</code></a>.</p>\n\n<p>However, since you're throwing the key away anyway, you may as well simply iterate over the dictionary's values:</p>\n\n<pre><code>for m in self.materials.itervalues():\n</code></pre>\n\n<p>In Python 3.<em>x</em>, prefer <a href=\"http://docs.python.org/3/library/stdtypes.html#dict.values\" rel=\"noreferrer\"><code>dict.values()</code></a> (which returns a <a href=\"http://docs.python.org/3/library/stdtypes.html#dict-views\" rel=\"noreferrer\">dictionary view object</a>):</p>\n\n<pre><code>for m in self.materials.values():\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 215064,
+                "user_id": 26428,
+                "user_type": "registered",
+                "accept_rate": 79,
+                "profile_image": "https://www.gravatar.com/avatar/a85af5779b78386bc17a9532a5126ecb?s=128&d=identicon&r=PG",
+                "display_name": "Dennis Williamson",
+                "link": "https://stackoverflow.com/users/26428/dennis-williamson"
+            },
+            "is_accepted": false,
+            "score": 146,
+            "last_activity_date": 1445617835,
+            "last_edit_date": 1445617835,
+            "creation_date": 1323824069,
+            "answer_id": 8498327,
+            "question_id": 5446964,
+            "body": "<p>Python 2.6 and 3.0 require the field numbers. <a href=\"http://docs.python.org/library/string.html\">In Python 2.7 and later</a> and 3.1 and later, they can be omitted.</p>\n\n<blockquote>\n  <p>Changed in version 2.7: The positional argument specifiers can be\n  omitted, so '{} {}' is equivalent to '{0} {1}'.</p>\n</blockquote>\n\n<pre><code>python2.6.4&gt;&gt;&gt; print '|{0:^12}|{1:^12}|'.format(3,4)\n|     3      |     4     |\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 5742,
+                "user_id": 2128591,
+                "user_type": "registered",
+                "accept_rate": 50,
+                "profile_image": "https://www.gravatar.com/avatar/b3e52db6fa8d8898c96da35c99165622?s=128&d=identicon&r=PG",
+                "display_name": "Paolo Rovelli",
+                "link": "https://stackoverflow.com/users/2128591/paolo-rovelli"
+            },
+            "is_accepted": false,
+            "score": 139,
+            "last_activity_date": 1420908901,
+            "last_edit_date": 1420908901,
+            "creation_date": 1420896997,
+            "answer_id": 27876800,
+            "question_id": 11536764,
+            "body": "<p>It depends on how you want to launch your script.</p>\n\n<p>If you want to <a href=\"https://docs.python.org/3/using/cmdline.html\">launch your UnitTest from the command line</a> in a classic way, that is:</p>\n\n<pre><code>python tests/core_test.py\n</code></pre>\n\n<p>Then, since in this case <em>'components'</em> and <em>'tests'</em> are siblings folders, you can import the relative module either using the <em>insert</em> or the <em>append</em> method of the <em><a href=\"https://docs.python.org/2/library/sys.html#sys.path\">sys.path</a></em> module.\nSomething like:</p>\n\n<pre><code>import sys\nfrom os import path\nsys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )\nfrom components.core import GameLoopEvents\n</code></pre>\n\n<p>Otherwise, you can <a href=\"https://docs.python.org/2/using/cmdline.html#cmdoption-m\">launch your script with the '-m' argument</a> (note that in this case, we are talking about a package, and thus you must not give the <em>'.py'</em> extension), that is:</p>\n\n<pre><code>python -m pkg.tests.core_test\n</code></pre>\n\n<p>In such a case, you can simply use the relative import as you were doing:</p>\n\n<pre><code>from ..components.core import GameLoopEvents\n</code></pre>\n\n<p>You can finally mix the two approaches, so that your script will work no matter how it is called.\nFor example:</p>\n\n<pre><code>if __name__ == '__main__':\n    if __package__ is None:\n        import sys\n        from os import path\n        sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )\n        from components.core import GameLoopEvents\n    else:\n        from ..components.core import GameLoopEvents\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 176344,
+                "user_id": 35070,
+                "user_type": "registered",
+                "accept_rate": 78,
+                "profile_image": "https://www.gravatar.com/avatar/6f92354195e8874dbee44d5c8714d506?s=128&d=identicon&r=PG",
+                "display_name": "phihag",
+                "link": "https://stackoverflow.com/users/35070/phihag"
+            },
+            "is_accepted": true,
+            "score": 136,
+            "last_activity_date": 1333799607,
+            "creation_date": 1333799607,
+            "answer_id": 10054232,
+            "question_id": 10054122,
+            "body": "<p>Chances are that you're running an old Python version, and not 3.1. In Python 2.6, you need indices in the format specs, like this:</p>\n\n<pre><code>\"{0} {1}\\n\".format(x,y)\n</code></pre>\n\n<p>Update your Python version to a recent one, preferably 2.7 or 3.2, to fix the problem. According to the documentation, leaving out the numeric indices <a href=\"http://docs.python.org/dev/library/string.html#format-string-syntax\" rel=\"noreferrer\">should work in Python 3.1</a>:</p>\n\n<blockquote>\n  <p>Changed in version 3.1: The positional argument specifiers can be omitted, so '{} {}' is equivalent to '{0} {1}'.</p>\n</blockquote>\n"
+        },
+        {
+            "owner": {
+                "reputation": 31167,
+                "user_id": 322806,
+                "user_type": "registered",
+                "accept_rate": 40,
+                "profile_image": "https://i.stack.imgur.com/TDQGm.jpg?s=128&g=1",
+                "display_name": "Winston Ewert",
+                "link": "https://stackoverflow.com/users/322806/winston-ewert"
+            },
+            "is_accepted": true,
+            "score": 127,
+            "last_activity_date": 1430086325,
+            "last_edit_date": 1430086325,
+            "creation_date": 1301198515,
+            "answer_id": 5447119,
+            "question_id": 5446964,
+            "body": "<p>I'm gonna guess that you are running python 2.6 by accident somehow.</p>\n\n<p>This feature is only available for at least 3.1 if you are using python 3, or 2.7 if you are using python 2.</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 7379,
+                "user_id": 104480,
+                "user_type": "registered",
+                "accept_rate": 80,
+                "profile_image": "https://www.gravatar.com/avatar/0eb26fbd1eb7ad27cdc44770390034e9?s=128&d=identicon&r=PG",
+                "display_name": "ebo",
+                "link": "https://stackoverflow.com/users/104480/ebo"
+            },
+            "is_accepted": true,
+            "score": 121,
+            "last_activity_date": 1344969669,
+            "last_edit_date": 1344969669,
+            "creation_date": 1261006674,
+            "answer_id": 1918581,
+            "question_id": 1918539,
+            "body": "<p>You are importing from package \"sub\". <code>start.py</code> is not itself in a package even if there is a <code>__init__.py</code> present.</p>\n\n<p>You would need to start your program from one directory over <code>parent.py</code>:</p>\n\n<pre><code>./start.py\n\n./pkg/__init__.py\n./pkg/parent.py\n./pkg/sub/__init__.py\n./pkg/sub/relative.py\n</code></pre>\n\n<p>With <code>start.py</code>:</p>\n\n<pre><code>import pkg.sub.relative\n</code></pre>\n\n<p>Now pkg is the top level package and your relative import should work.</p>\n\n<hr>\n\n<p>If you want to stick with your current layout you can just use <code>import parent</code>. Because you use <code>start.py</code> to launch your interpreter, the directory where <code>start.py</code> is located is in your python path. <code>parent.py</code> lives there as a separate module.</p>\n\n<p>You can also safely delete the top level <code>__init__.py</code>, if you don't import anything into a script further up the directory tree.</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 1457,
+                "user_id": 2319271,
+                "user_type": "registered",
+                "profile_image": "https://www.gravatar.com/avatar/698101b18778c9ccb944b488cbfe07e8?s=128&d=identicon&r=PG",
+                "display_name": "Alexander Klimenko",
+                "link": "https://stackoverflow.com/users/2319271/alexander-klimenko"
+            },
+            "is_accepted": false,
+            "score": 94,
+            "last_activity_date": 1477381913,
+            "last_edit_date": 1477381913,
+            "creation_date": 1391586085,
+            "answer_id": 21571350,
+            "question_id": 21351251,
+            "body": "<p>Looks like error caused <a href=\"https://docs.djangoproject.com/en/1.6/ref/databases/#time-zone-definitions\">Django's 1.6 timezone functionality changes</a>. The docs now mention this error specifically (<a href=\"https://code.djangoproject.com/ticket/21629\">bug report</a>, <a href=\"https://docs.djangoproject.com/en/stable/topics/i18n/timezones/#troubleshooting\">link to docs</a>).</p>\n\n<p>You have to load timezone tables into mysql (<a href=\"http://dev.mysql.com/doc/refman/5.6/en/mysql-tzinfo-to-sql.html\">http://dev.mysql.com/doc/refman/5.6/en/mysql-tzinfo-to-sql.html</a>).\nTry execute on your database server:</p>\n\n<pre><code>mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -D mysql -u root -p \n</code></pre>\n\n<p>And then run \"flush tables\" or \"flush query cache\", otherwise the problem may not disappear even though you've loaded the correct timezone data:</p>\n\n<pre><code>mysql -u root -p -e \"flush tables;\" mysql \n</code></pre>\n\n<p>updated by @qris</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 1176,
+                "user_id": 668356,
+                "user_type": "registered",
+                "profile_image": "https://i.stack.imgur.com/dHT7U.jpg?s=128&g=1",
+                "display_name": "jainbasil",
+                "link": "https://stackoverflow.com/users/668356/jainbasil"
+            },
+            "is_accepted": true,
+            "score": 93,
+            "last_activity_date": 1339046659,
+            "creation_date": 1339046659,
+            "answer_id": 10926115,
+            "question_id": 10921430,
+            "body": "<p>I was getting the same issue in Mac OS X Snow Leopard. It seems to be an issue with Terminal.app.</p>\n\n<p>Please add the following to your $HOME/.bash_profile</p>\n\n<pre><code>export LC_ALL=en_US.UTF-8\nexport LANG=en_US.UTF-8\n</code></pre>\n\n<p>Do</p>\n\n<pre><code>source $HOME/.bash_profile\n</code></pre>\n\n<p>and try. This will solve the issue.</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 8160,
+                "user_id": 1290420,
+                "user_type": "registered",
+                "accept_rate": 100,
+                "profile_image": "https://www.gravatar.com/avatar/2b1ccf8768a606b7444b4d0d1e04ca56?s=128&d=identicon&r=PG",
+                "display_name": "gauden",
+                "link": "https://stackoverflow.com/users/1290420/gauden"
+            },
+            "is_accepted": true,
+            "score": 93,
+            "last_activity_date": 1466161005,
+            "last_edit_date": 1466161005,
+            "creation_date": 1364066183,
+            "answer_id": 15591007,
+            "question_id": 15526996,
+            "body": "<p>I summarize here the solution to be found on: <a href=\"http://blog.lobraun.de/2009/04/11/mercurial-on-mac-os-x-valueerror-unknown-locale-utf-8/\">http://blog.lobraun.de/2009/04/11/mercurial-on-mac-os-x-valueerror-unknown-locale-utf-8/</a> </p>\n\n<p>I added these lines to my <code>.bash_profile</code>:</p>\n\n<pre><code>export LC_ALL=en_US.UTF-8\nexport LANG=en_US.UTF-8\n</code></pre>\n\n<p>I reloaded the profile:</p>\n\n<pre><code>source ~/.bash_profile\n</code></pre>\n\n<p>I then ran <code>ipython</code> again:</p>\n\n<pre><code>ipython notebook\n</code></pre>\n\n<h2>Changing locales</h2>\n\n<p>The above will work for the English language in a US locale. One may want different settings.</p>\n\n<p>At the risk of stating the obvious, to discover the current settings for your system, use:</p>\n\n<pre><code>$ locale\n</code></pre>\n\n<p>And to retrieve a list of all valid settings on your system:</p>\n\n<pre><code>$ locale -a\n</code></pre>\n\n<p>Then choose your preferred locale. For example, for a Swiss French locale, the solution would look like this:</p>\n\n<pre><code>export LC_ALL=fr_CH.UTF-8\nexport LANG=fr_CH.UTF-8\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 1278,
+                "user_id": 1600895,
+                "user_type": "registered",
+                "accept_rate": 62,
+                "profile_image": "https://www.gravatar.com/avatar/c8881bff482cd7251d8836faf2d754e7?s=128&d=identicon&r=PG",
+                "display_name": "ahmadux",
+                "link": "https://stackoverflow.com/users/1600895/ahmadux"
+            },
+            "is_accepted": true,
+            "score": 92,
+            "last_activity_date": 1465761151,
+            "last_edit_date": 1465761151,
+            "creation_date": 1409068220,
+            "answer_id": 25510061,
+            "question_id": 25504964,
+            "body": "<p>I got the answer from the OpenCV Stack Exchange site. <a href=\"http://answers.opencv.org/question/40329/python-valueerror-too-many-values-to-unpack/\">Answer</a></p>\n\n<p>THE ANSWER: </p>\n\n<blockquote>\n  <p>I bet you are using the current OpenCV's master branch: here the return statements have changed, see <a href=\"http://docs.opencv.org/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=findcontours\">http://docs.opencv.org/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=findcontours</a>.</p>\n  \n  <p>Thus, change the corresponding line to read:</p>\n\n<pre><code>_, contours, _= cv2.findContours(skin_ycrcb, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)\n</code></pre>\n  \n  <p>Or: since the current trunk is still not stable and you probably will run in some more problems, you may want to use OpenCV's current stable version 2.4.9.</p>\n</blockquote>\n"
+        },
+        {
+            "owner": {
+                "reputation": 65432,
+                "user_id": 3571,
+                "user_type": "registered",
+                "accept_rate": 57,
+                "profile_image": "https://www.gravatar.com/avatar/b1d6ed6863a3b4aab3565f1f9625f156?s=128&d=identicon&r=PG",
+                "display_name": "codeape",
+                "link": "https://stackoverflow.com/users/3571/codeape"
+            },
+            "is_accepted": true,
+            "score": 88,
+            "last_activity_date": 1451061476,
+            "last_edit_date": 1451061476,
+            "creation_date": 1248245995,
+            "answer_id": 1163508,
+            "question_id": 1163459,
+            "body": "<p>The <code>read</code> method returns a sequence of bytes as a string. To convert from a string byte-sequence to binary data, use the built-in <code>struct</code> module: <a href=\"http://docs.python.org/library/struct.html\" rel=\"noreferrer\">http://docs.python.org/library/struct.html</a>. </p>\n\n<pre><code>import struct\n\nprint(struct.unpack('i', fin.read(4)))\n</code></pre>\n\n<p>Note that <code>unpack</code> always returns a tuple, so <code>struct.unpack('i', fin.read(4))[0]</code> gives the integer value that you are after.</p>\n\n<p>You should probably use the format string <code>'&lt;i'</code> (&lt; is a modifier that indicates little-endian byte-order and standard size and alignment - the default is to use the platform's byte ordering, size and alignment). According to the BMP format spec, the bytes should be written in Intel/little-endian byte order.</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 6356,
+                "user_id": 1209921,
+                "user_type": "registered",
+                "profile_image": "https://www.gravatar.com/avatar/c4d1606f4b1eaa26fe4dc65e57e0951a?s=128&d=identicon&r=PG",
+                "display_name": "Matthias",
+                "link": "https://stackoverflow.com/users/1209921/matthias"
+            },
+            "is_accepted": true,
+            "score": 80,
+            "last_activity_date": 1410770079,
+            "last_edit_date": 1410770079,
+            "creation_date": 1410769746,
+            "answer_id": 25843743,
+            "question_id": 25843698,
+            "body": "<p>You should write the pickled data with a lower protocol number in Python 3. Python 3 introduced a new protocol with the number <code>3</code> (and uses it as default), so switch back to a value of <code>2</code> which can be read by Python 2.</p>\n\n<p>Check the <code>protocol</code>parameter in <a href=\"https://docs.python.org/3/library/pickle.html#pickle.dump\"><code>pickle.dump</code></a>. Your resulting code will look like this.</p>\n\n<pre><code>pickle.dump(your_object, your_file, protocol=2)\n</code></pre>\n\n<p>There is no <code>protocol</code>parameter in <a href=\"https://docs.python.org/3/library/pickle.html#pickle.load\"><code>pickle.load</code></a> because <code>pickle</code> can determine the protocol from the file.</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 223748,
+                "user_id": 2225682,
+                "user_type": "registered",
+                "profile_image": "https://www.gravatar.com/avatar/4958f4712d94ab82fe55fa471308e4b5?s=128&d=identicon&r=PG",
+                "display_name": "falsetru",
+                "link": "https://stackoverflow.com/users/2225682/falsetru"
+            },
+            "is_accepted": true,
+            "score": 79,
+            "last_activity_date": 1389419917,
+            "last_edit_date": 1389419917,
+            "creation_date": 1389418759,
+            "answer_id": 21058946,
+            "question_id": 21058935,
+            "body": "<p>As you can see in the following example, <code>json.loads</code> (and <code>json.load</code>) does not decode multiple json object.</p>\n\n<pre><code>&gt;&gt;&gt; json.loads('{}')\n{}\n&gt;&gt;&gt; json.loads('{}{}') # == json.loads(json.dumps({}) + json.dumps({}))\nTraceback (most recent call last):\n  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;\n  File \"C:\\Python27\\lib\\json\\__init__.py\", line 338, in loads\n    return _default_decoder.decode(s)\n  File \"C:\\Python27\\lib\\json\\decoder.py\", line 368, in decode\n    raise ValueError(errmsg(\"Extra data\", s, end, len(s)))\nValueError: Extra data: line 1 column 3 - line 1 column 5 (char 2 - 4)\n</code></pre>\n\n<p>If you want to dump multiple dictionaries, wrap them in a list, dump the list (instead of dumping dictionaries multiple times)</p>\n\n<pre><code>&gt;&gt;&gt; dict1 = {}\n&gt;&gt;&gt; dict2 = {}\n&gt;&gt;&gt; json.dumps([dict1, dict2])\n'[{}, {}]'\n&gt;&gt;&gt; json.loads(json.dumps([dict1, dict2]))\n[{}, {}]\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 2827,
+                "user_id": 84274,
+                "user_type": "registered",
+                "accept_rate": 90,
+                "profile_image": "https://www.gravatar.com/avatar/203ea9dcbf65af3374eca67ea072d520?s=128&d=identicon&r=PG",
+                "display_name": "mkelley33",
+                "link": "https://stackoverflow.com/users/84274/mkelley33"
+            },
+            "is_accepted": false,
+            "score": 71,
+            "last_activity_date": 1333290129,
+            "creation_date": 1333290129,
+            "answer_id": 9965090,
+            "question_id": 8672754,
+            "body": "<p>I once preferred the most excellent answer given above by @Robert Rossney. Nowadays, I prefer to use assertRaises as a context manager (a new capability in unittest2) like so:</p>\n\n<pre><code>with self.assertRaises(TypeError) as cm:\n    failure.fail()\nself.assertEqual(\n    'The registeraddress must be an integer. Given: 1.0',\n    str(cm.exception)\n)\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 1187,
+                "user_id": 1649432,
+                "user_type": "registered",
+                "accept_rate": 71,
+                "profile_image": "https://www.gravatar.com/avatar/f29cee49cd2599f8d679ab17a81efc95?s=128&d=identicon&r=PG",
+                "display_name": "ramcdougal",
+                "link": "https://stackoverflow.com/users/1649432/ramcdougal"
+            },
+            "is_accepted": true,
+            "score": 67,
+            "last_activity_date": 1395784032,
+            "creation_date": 1395784032,
+            "answer_id": 22647006,
+            "question_id": 22646463,
+            "body": "<p><code>and</code> tests whether both expressions are logically <code>True</code> while <code>&amp;</code> (when used with <code>True</code>/<code>False</code> values) tests if both are <code>True</code>.</p>\n\n<p>In Python, empty built-in objects are typically treated as logically <code>False</code> while non-empty built-ins are logically <code>True</code>. This facilitates the common use case where you want to do something if a list is empty and something else if the list is not. Note that this means that the list [False] is logically <code>True</code>:</p>\n\n<pre><code>&gt;&gt;&gt; if [False]:\n...    print 'True'\n...\nTrue\n</code></pre>\n\n<p>So in Example 1, the first list is non-empty and therefore logically <code>True</code>, so the truth value of the <code>and</code> is the same as that of the second list. (In our case, the second list is non-empty and therefore logically <code>True</code>, but identifying that would require an unnecessary step of calculation.)</p>\n\n<p>For example 2, lists cannot meaningfully be combined in a bitwise fashion because they can contain arbitrary unlike elements. Things that can be combined bitwise include: Trues and Falses, integers.</p>\n\n<p>NumPy objects, by contrast, support vectorized calculations. That is, they let you perform the same operations on multiple pieces of data.</p>\n\n<p>Example 3 fails because NumPy arrays (of length > 1) have no truth value as this prevents vector-based logic confusion.</p>\n\n<p>Example 4 is simply a vectorized bit <code>and</code> operation.</p>\n\n<p><strong>Bottom Line</strong></p>\n\n<ul>\n<li><p>If you are not dealing with arrays and are not performing math manipulations of integers, you probably want <code>and</code>.</p></li>\n<li><p>If you have vectors of truth values that you wish to combine, use <code>numpy</code> with <code>&amp;</code>.</p></li>\n</ul>\n"
+        },
+        {
+            "owner": {
+                "reputation": 1774,
+                "user_id": 3964339,
+                "user_type": "registered",
+                "profile_image": "https://www.gravatar.com/avatar/cf6a880a6dc36aabf1244b0e7dc960bf?s=128&d=identicon&r=PG",
+                "display_name": "Yash Mehrotra",
+                "link": "https://stackoverflow.com/users/3964339/yash-mehrotra"
+            },
+            "is_accepted": true,
+            "score": 66,
+            "last_activity_date": 1446081741,
+            "creation_date": 1446081741,
+            "answer_id": 33404409,
+            "question_id": 33404394,
+            "body": "<p>Did you install the dependencies for pillow ? You can install them by</p>\n\n<pre><code>$ sudo apt-get build-dep python-imaging\n$ sudo apt-get install libjpeg8 libjpeg62-dev libfreetype6 libfreetype6-dev\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 1835,
+                "user_id": 532799,
+                "user_type": "registered",
+                "profile_image": "https://www.gravatar.com/avatar/ea4b7ec02a61bd811006159e8f04ab6f?s=128&d=identicon&r=PG",
+                "display_name": "Sunhwan Jo",
+                "link": "https://stackoverflow.com/users/532799/sunhwan-jo"
+            },
+            "is_accepted": false,
+            "score": 59,
+            "last_activity_date": 1477271422,
+            "last_edit_date": 1477271422,
+            "creation_date": 1313272947,
+            "answer_id": 7053569,
+            "question_id": 7053551,
+            "body": "<pre><code>for k, m in self.materials.items():\n</code></pre>\n\n<p>example:</p>\n\n<pre><code>miles_dict = {'Monday':1, 'Tuesday':2.3, 'Wednesday':3.5, 'Thursday':0.9}\nfor k, v in miles_dict.items():\n    print(\"%s: %s\" % (k, v))\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 4026,
+                "user_id": 778517,
+                "user_type": "registered",
+                "accept_rate": 60,
+                "profile_image": "https://www.gravatar.com/avatar/ea36c82e1688276fa3a8f2dca097730d?s=128&d=identicon&r=PG",
+                "display_name": "S&#233;rgio",
+                "link": "https://stackoverflow.com/users/778517/s%c3%a9rgio"
+            },
+            "is_accepted": false,
+            "score": 56,
+            "last_activity_date": 1400187612,
+            "last_edit_date": 1400187612,
+            "creation_date": 1321922072,
+            "answer_id": 8220515,
+            "question_id": 7065164,
+            "body": "<p>I had use from dt_aware to dt_unware</p>\n\n<pre><code>dt_unaware = dt_aware.replace(tzinfo=None)\n</code></pre>\n\n<p>and dt_unware to dt_aware </p>\n\n<pre><code>from pytz import timezone\nlocaltz = timezone('Europe/Lisbon')\ndt_aware = localtz.localize(dt_unware)\n</code></pre>\n\n<p>but answer before is also a good solution.</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 2995,
+                "user_id": 19531,
+                "user_type": "registered",
+                "profile_image": "https://www.gravatar.com/avatar/15b21ef43c9e335448280fc051ada9c4?s=128&d=identicon&r=PG",
+                "display_name": "akent",
+                "link": "https://stackoverflow.com/users/19531/akent"
+            },
+            "is_accepted": true,
+            "score": 48,
+            "last_activity_date": 1376466781,
+            "last_edit_date": 1376466781,
+            "creation_date": 1340575821,
+            "answer_id": 11181607,
+            "question_id": 11181519,
+            "body": "<p>Straight from the python documentation:\n<a href=\"http://docs.python.org/reference/executionmodel.html\" rel=\"noreferrer\">http://docs.python.org/reference/executionmodel.html</a></p>\n\n<blockquote>\n  <p>By default, when in the <code>__main__</code> module, <code>__builtins__</code> is the\n  built-in module <code>__builtin__</code> (note: no 's'); when in any other\n  module, <code>__builtins__</code> is an alias for the dictionary of the\n  <code>__builtin__</code> module itself. </p>\n  \n  <p><code>__builtins__</code> can be set to a user-created dictionary to create a\n  weak form of restricted execution.</p>\n  \n  <p><strong>CPython implementation detail:</strong> Users should not touch <code>__builtins__</code>; it is strictly an implementation detail.  Users\n  wanting to override values in the builtins namespace should <code>import</code>\n  the <code>__builtin__</code> (no 's') module and modify its attributes\n  appropriately. The namespace for a module is automatically created the\n  first time a module is imported.</p>\n</blockquote>\n\n<p>Note that in Python3, the module <code>__builtin__</code> has been renamed to <code>builtins</code> to avoid some of this confusion.</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 14990,
+                "user_id": 140264,
+                "user_type": "registered",
+                "accept_rate": 82,
+                "profile_image": "https://www.gravatar.com/avatar/bc8bdf4b04ab7131d3a3f18287915136?s=128&d=identicon&r=PG",
+                "display_name": "brice",
+                "link": "https://stackoverflow.com/users/140264/brice"
+            },
+            "is_accepted": true,
+            "score": 47,
+            "last_activity_date": 1335338508,
+            "last_edit_date": 1335338508,
+            "creation_date": 1335192600,
+            "answer_id": 10282852,
+            "question_id": 10282674,
+            "body": "<h2>Quick Check</h2>\n\n<p>From the signatures, we can tell that they are different:</p>\n\n<blockquote>\n  <p><strong>pow(x, y[, z])</strong></p>\n  \n  <p><strong>math.pow(x, y)</strong></p>\n</blockquote>\n\n<p>Also, trying it in the shell will give you a quick idea: </p>\n\n<pre><code>&gt;&gt;&gt; pow is math.pow\nFalse\n</code></pre>\n\n<h2>Testing the differences</h2>\n\n<p>Another way to understand the differences in behaviour between the two functions is to test for them: </p>\n\n<pre><code>import math\nimport traceback\nimport sys\n\ninf = float(\"inf\")\nNaN = float(\"nan\")\n\nvals = [inf, NaN, 0.0, 1.0, 2.2, -1.0, -0.0, -2.2, -inf, 1, 0, 2]\n\ntests = set([])\n\nfor vala in vals:\n  for valb in vals:\n    tests.add( (vala, valb) )\n    tests.add( (valb, vala) )\n\n\nfor a,b in tests:\n  print(\"math.pow(%f,%f)\"%(a,b) )\n  try:\n    print(\"    %f \"%math.pow(a,b))\n  except:\n    traceback.print_exc()\n\n  print(\"__builtins__.pow(%f,%f)\"%(a,b) )\n  try:\n    print(\"    %f \"%__builtins__.pow(a,b))\n  except:\n    traceback.print_exc()\n</code></pre>\n\n<p>We can then notice some subtle differences. For example:</p>\n\n<pre><code>math.pow(0.000000,-2.200000)\n    ValueError: math domain error\n\n__builtins__.pow(0.000000,-2.200000)\n    ZeroDivisionError: 0.0 cannot be raised to a negative power\n</code></pre>\n\n<p>There are other differences, and the test list above is not complete (no long numbers, no complex, etc...), but this will give us a pragmatic list of how the two functions behave differently. I would also recommend extending the above test to check for the type that each function returns. You could probably write something similar that creates a report of the differences between the two functions.</p>\n\n<h2><code>math.pow()</code></h2>\n\n<p><code>math.pow()</code> handles its arguments very differently from the builtin <code>**</code> or <code>pow()</code>. This comes at the cost of flexibility. Having a look at <a href=\"http://hg.python.org/cpython/file/c7163a7f7cd2/Modules/mathmodule.c#l1781\" rel=\"noreferrer\">the source</a>, we can see that the arguments to <code>math.pow()</code> are <strong>cast directly to doubles</strong>:</p>\n\n<pre><code>static PyObject *\nmath_pow(PyObject *self, PyObject *args)\n{\n    PyObject *ox, *oy;\n    double r, x, y;\n    int odd_y;\n\n    if (! PyArg_UnpackTuple(args, \"pow\", 2, 2, &amp;ox, &amp;oy))\n        return NULL;\n    x = PyFloat_AsDouble(ox);\n    y = PyFloat_AsDouble(oy);\n/*...*/\n</code></pre>\n\n<p>The checks are then carried out against the doubles for validity, and then the result is passed to the underlying C math library. </p>\n\n<h2>builtin <code>pow()</code></h2>\n\n<p>The built-in <code>pow()</code> (same as the <code>**</code> operator) on the other hand behaves very differently, it actually uses the Objects's own implementation of the <code>**</code> operator, which can be overridden by the end user if need be by replacing a number's <code>__pow__()</code>, <code>__rpow__()</code> or <code>__ipow__()</code>,  method.</p>\n\n<p>For built-in types, it is instructive to study the difference between the power function implemented for two numeric types, for example, <a href=\"http://hg.python.org/cpython/file/6a60359556f9/Objects/floatobject.c#l807\" rel=\"noreferrer\">floats</a>, <a href=\"http://hg.python.org/cpython/file/c7163a7f7cd2/Objects/longobject.c#l3599\" rel=\"noreferrer\">long</a> and <a href=\"http://hg.python.org/cpython/file/c7163a7f7cd2/Objects/complexobject.c#l510\" rel=\"noreferrer\">complex</a>.</p>\n\n<h2>Overridding the default behaviour</h2>\n\n<p>Emulating numeric types is described <a href=\"http://docs.python.org/reference/datamodel.html#numeric-types\" rel=\"noreferrer\">here</a>. essentially, if you are creating a new type for numbers with uncertainty, what you will have to do is provide the <code>__pow__()</code>, <code>__rpow__()</code> and possibly <code>__ipow__()</code> methods for your type. This will allow your numbers to be used with the operator:</p>\n\n<pre><code>class Uncertain:\n  def __init__(self, x, delta=0):\n    self.delta = delta\n    self.x = x\n  def __pow__(self, other):\n    return Uncertain(\n      self.x**other.x, \n      Uncertain._propagate_power(self, other)\n    )\n  @staticmethod\n  def _propagate_power(A, B):\n    return math.sqrt(\n      ((B.x*(A.x**(B.x-1)))**2)*A.delta*A.delta +\n      (((A.x**B.x)*math.log(B.x))**2)*B.delta*B.delta\n    )\n</code></pre>\n\n<p>In order to override <code>math.pow()</code> you will have to monkey patch it to support your new type:</p>\n\n<pre><code>def new_pow(a,b):\n    _a = Uncertain(a)\n    _b = Uncertain(b)\n    return _a ** _b\n\nmath.pow = new_pow\n</code></pre>\n\n<p>Note that for this to work you'll have to wrangle the <code>Uncertain</code> class to cope with an <code>Uncertain</code> instance as an input to <code>__init__()</code></p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 421,
+                "user_id": 7412176,
+                "user_type": "unregistered",
+                "profile_image": "https://www.gravatar.com/avatar/f85a56d22c5336d29f9b1e8e1b224656?s=128&d=identicon&r=PG",
+                "display_name": "kang",
+                "link": "https://stackoverflow.com/users/7412176/kang"
+            },
+            "is_accepted": false,
+            "score": 42,
+            "last_activity_date": 1512911911,
+            "last_edit_date": 1512911911,
+            "creation_date": 1484260223,
+            "answer_id": 41624199,
+            "question_id": 7065164,
+            "body": "<p>All of these examples use an external module, but you can achieve the same result using just the datetime module.</p>\n\n<pre><code>from datetime import datetime\nfrom datetime import timezone\n\ndt = datetime.now()\ndt.replace(tzinfo=timezone.utc)\n\nprint(dt.replace(tzinfo=timezone.utc).isoformat())\n'2017-01-12T22:11:31+00:00'\n</code></pre>\n\n<p>Fewer dependencies and no pytz issues.</p>\n\n<p>NOTE: If you wish to use this with python3 and python2, you can use this as well for the timezone import (hardcoded for UTC):</p>\n\n<pre><code>try:\n    from datetime import timezone\n    utc = timezone.utc\nexcept ImportError:\n    #Hi there python2 user\n    class UTC(tzinfo):\n        def utcoffset(self, dt):\n            return timedelta(0)\n        def tzname(self, dt):\n            return \"UTC\"\n        def dst(self, dt):\n            return timedelta(0)\nutc = UTC()\n</code></pre>\n"
+        },
+        {
+            "owner": {
+                "reputation": 21984,
+                "user_id": 4433386,
+                "user_type": "registered",
+                "accept_rate": 83,
+                "profile_image": "https://i.stack.imgur.com/hbHEL.png?s=128&g=1",
+                "display_name": "Marcus M&#252;ller",
+                "link": "https://stackoverflow.com/users/4433386/marcus-m%c3%bcller"
+            },
+            "is_accepted": false,
+            "score": 41,
+            "last_activity_date": 1436515059,
+            "last_edit_date": 1436515059,
+            "creation_date": 1436460211,
+            "answer_id": 31323566,
+            "question_id": 31323499,
+            "body": "<p>This might happen inside scikit, and it depends on what you're doing. I recommend reading the documentation for the functions you're using. You might be using one which depends e.g. on your matrix being positive definite and not fulfilling that criteria.</p>\n\n<p><strong>EDIT</strong>: How could I miss that:</p>\n\n<pre><code>np.isnan(mat.any()) #and gets False\nnp.isfinite(mat.all()) #and gets True\n</code></pre>\n\n<p>is obviously wrong. Right would be:</p>\n\n<pre><code>np.any(np.isnan(mat))\n</code></pre>\n\n<p>and</p>\n\n<pre><code>np.all(np.isfinite(mat))\n</code></pre>\n\n<p>You want to check wheter any of the element is NaN, and not whether the return value of the <code>any</code> function is a number...</p>\n"
+        },
+        {
+            "owner": {
+                "reputation": 21011,
+                "user_id": 1401900,
+                "user_type": "registered",
+                "accept_rate": 60,
+                "profile_image": "https://i.stack.imgur.com/fCVY7.jpg?s=128&g=1",
+                "display_name": "Paulo Bu",
+                "link": "https://stackoverflow.com/users/1401900/paulo-bu"
+            },
+            "is_accepted": false,
+            "score": 40,
+            "last_activity_date": 1373217376,
+            "creation_date": 1373217376,
+            "answer_id": 17514360,
+            "question_id": 17505935,
+            "body": "<p>Ok, the code is slightly messy, I'm sure you'll be better off <a href=\"https://docs.djangoproject.com/en/dev/topics/forms/modelforms/\">tackling your problem with <code>ModelForms</code></a>. Seems to me the problem actually is the line:</p>\n\n<pre><code>s.survey = self.survey\n</code></pre>\n\n<p>because <code>s</code> object hasn't been written to the database yet, so accessing it's <code>survey</code> ManyToMany field can yield problems. If you want to copy the same set of surveys from <code>self</code>  to <code>s</code> you should do it iterating over them like this:</p>\n\n<p>If this yields the same error, then try to do <code>s.save()</code> first and later copy the items:</p>\n\n<pre><code>s.save()\nfor item in self.survey:\n    s.survey.add(item)\n</code></pre>\n\n<p>Your code is likely to remain like this:</p>\n\n<pre><code>def save(self, commit=True):\n    s = SurveyThread()\n    # these fields aren't problematic\n    s.email = \"test@test.com\"\n    s.comment = self.cleaned_data['comment']\n    # you can add s.save() here to remove problems associated with object \n    # not yet persisted\n    # s.save()\n    for item in self.survey:\n        s.survey.add(item)\n    if commit:\n        s.save()\n    return s\n</code></pre>\n\n<p>I can see you have a <code>if commit:</code> to persist the object, so try to accommodate the code to make use of it. If the first version of my answer worked then you'll be fine with the <code>s.save()</code> at the end, if the second is the one who worked, then you'll have to adjust the code a little to stick to the <code>commit</code> value.</p>\n\n<p>Hope this helps!</p>\n"
+        }
+    ],
+    "has_more": true,
+    "quota_max": 300,
+    "quota_remaining": 239
+}

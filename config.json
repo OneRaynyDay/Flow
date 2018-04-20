@@ -1,0 +1,18 @@
+{
+    "question_fields": [
+        "question_id",
+        "tags",
+        "creation_date",
+        "body",
+        "title"
+    ],
+    "answer_fields": [
+        "question_id",
+        "body",
+        "score",
+        "answer_id"
+    ],
+    "version": "2.2",
+    "base_url": "https://api.stackexchange.com",
+    "site": "stackoverflow"
+}
