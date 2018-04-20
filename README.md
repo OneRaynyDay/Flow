@@ -1,2 +1,3 @@
 # Flow
-Replacing 90% of the software workforce
+
+Allows you to see stack overflow answers before you even attempt to search for it!
