@@ -7,6 +7,7 @@
         "title"
     ],
     "answer_fields": [
+        "owner",
         "question_id",
         "body",
         "score",

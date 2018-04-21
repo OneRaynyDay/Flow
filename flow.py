@@ -5,9 +5,15 @@ import subprocess
 import so_api
 import traceback
 import re
+import tempfile
+import webbrowser
+import pprint
+
+from collections import defaultdict
 from bs4 import BeautifulSoup
 from html.parser import HTMLParser
 
+pp = pprint.PrettyPrinter(indent=4)
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -21,7 +27,6 @@ def static_vars(**kwargs):
 
 @static_vars(h=HTMLParser())
 def parse_html(html, exclude_tags=None):
-    print(parse_html.h.unescape(html))
     soup = BeautifulSoup(parse_html.h.unescape(html), "lxml")
     if not exclude_tags:
         exclude_tags = []
@@ -30,25 +35,42 @@ def parse_html(html, exclude_tags=None):
             tag.extract()
     return soup.get_text()
 
-def display_questions(qs, show_body=True, max_chars=100):
+def display_questions(qs, show_body=True, max_chars=100, stdout=True):
     dump = []
-    for q in qs:
+    for i,q in enumerate(qs):
         title = parse_html(q["title"])
-        dump.append("{} - \"{}\"".format(q["question_id"], title))
+        dump.append("{} - \"{}\"".format(i, title))
         if show_body:
             body = parse_html(q["body"], exclude_tags=["code"])
             dump.append("\t : {}".format(body[:max_chars]))
+    if not stdout:
+        return dump
     for d in dump:
         print(d[:max_chars])
 
-def display_answers(answers):
-    dump = []
-    h = HTMLParser() 
+def display_answers(answers, stdout=True):
+    qa_multimap = defaultdict(list)
     for ans in answers:
-        ans = parse_html(ans["body"])
-        dump.append(ans)
-    for d in dump:
-        print(d)
+        qa_multimap[ans["question_id"]].append(ans)
+    qa_multimap = dict(qa_multimap)
+    if not stdout:
+        return qa_multimap
+    for d in qa_multimap:
+        for a in qa_multimap[d]:
+            print("{} : ".format(d, a))
+
+@static_vars(editor=os.environ.get('EDITOR','vim'))
+def open_editor(text):
+    with tempfile.NamedTemporaryFile(suffix=".tmp") as tf:
+      tf.write(text.encode())
+      tf.flush()
+      subprocess.run([open_editor.editor, tf.name])
+
+def open_webbrowser(text):
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tf:
+      tf.write(text.encode())
+      tf.flush()
+      webbrowser.open('file://' + tf.name)
 
 module_name = os.path.splitext(sys.argv[1])[0]
 try:
@@ -56,7 +78,15 @@ try:
 except Exception as e:
     print("caught exception:", e)
     err_traceback = traceback.format_exc()
-    err = str(e)
+    err = str(e).split()
+    err = " ".join(["".join([i for i in e if i.isalpha()]) for e in err])
+    print("Fuck! You just ran into an error. Want to stack overflow it? [y/n]:")
+    res = input()
+    while res not in {"y", "n"}:
+        res = input()
+    if res == "n":
+        sys.exit(1)
+
 # pyargs = sys.argv[1:]
 # result = subprocess.run(["python"] + pyargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 # if result.returncode:
@@ -66,15 +96,30 @@ except Exception as e:
 #     print("Stdout hints: \n{}".format(stdout))
 
 api = so_api.SOApi()
-print("Asking: ", "Python, {}".format(err))
-res = api.query_questions("Python, {}".format(err), tagged='python')
+print("Asking: ", "python {}".format(err))
+qres = api.query_questions("Python, {}".format(err), tagged='python')
 
 print("I have found these questions:")
-display_questions(res, show_body=False)
+display_questions(qres, show_body=False)
 
 print("Which one(s) are you interested in?")
 qids = input().split(",")
-res = api.query_answers(qids, pagesize=10)
+
+idxmap = {qres[int(qid)]["question_id"] : int(qid) for qid in qids}
+qids = [str(qres[int(qid)]["question_id"]) for qid in qids]
+ares = api.query_answers(qids, pagesize=10)
 
 print("I have found these answers:")
-display_answers(res)
+ares = display_answers(ares, stdout=False)
+
+qentries = []
+for qid in ares:
+    question = qres[idxmap[qid]]
+    qstr = "<header>Title : {}</header>\n <header>Description : {} \n".format(question["title"], question["body"])
+    astrs = ""
+    for ans in ares[qid]:
+        pp.pprint(ans)
+        astrs += "<header>Answer from {}:</header>\n{}\n".format(ans["owner"]["display_name"], ans["body"])
+    qentries.append(qstr+astrs)
+
+open_webbrowser("\n-------\n".join(qentries))
