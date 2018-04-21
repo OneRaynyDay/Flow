@@ -15,6 +15,7 @@ import requests
 import sys
 
 from urllib.parse import urljoin
+from html.parser import HTMLParser
 
 
 # Required properties of SOApi.
@@ -52,7 +53,6 @@ class SOApi:
                 'sort' : sort,
                 'filter' : filter}
         payload.update(kwargs)
-        print(payload)
         r = requests.get(urljoin(self.api_url, "search/advanced"),
                 params=payload)
         r.raise_for_status()
