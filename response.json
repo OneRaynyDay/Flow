@@ -1,62 +1,106 @@
 [
     {
-        "score": 12,
-        "answer_id": 2492677,
+        "tags": [
+            "java",
+            "string",
+            "matlab"
+        ],
+        "creation_date": 1269265481,
         "question_id": 2492646,
-        "body": "<p>Matlab doesn't know how to work with anything but it's own structures.</p>\n\n<p>Convert the string to a char:</p>\n\n<p><code>cName = char(name);</code></p>\n"
+        "title": "MATLAB: dealing with java.lang.String",
+        "body": "<p>I seem to be stuck in Kafka-land, with a java.lang.String that I can't seem to use in MATLAB functions:</p>\n\n<pre><code>K&gt;&gt; name\n\nname =\n\nJason\n\nK&gt;&gt; sprintf('%s', name)\n??? Error using ==&gt; sprintf\nFunction is not defined for 'java.lang.String' inputs.\n\nK&gt;&gt; ['my name is ' name]\n??? Error using ==&gt; horzcat\nThe following error occurred converting from char to opaque:\nError using ==&gt; horzcat\nUndefined function or method 'opaque' for input arguments of type 'char'.\n</code></pre>\n\n<p>how can I get a java.lang.String to convert to a regular MATLAB character array?</p>\n"
     },
     {
-        "score": 6,
-        "answer_id": 9686123,
+        "tags": [
+            "arrays",
+            "matlab"
+        ],
+        "creation_date": 1331640205,
         "question_id": 9683646,
-        "body": "<p><strong>In short</strong>: Cell array is a <em>heterogeneous</em> container, regular array is <em>homogeneous</em>. This means that in a regular array all of the elements are of the same type, whereas in cell array, they can be different. You can read more about cell array <a href=\"https://stackoverflow.com/questions/9055015/difference-between-accessing-cell-elements-using-and-curly-or-normal-brac/9055336#9055336\">here</a>.</p>\n\n<p>Use <strong>cell array</strong> when:</p>\n\n<ul>\n<li>You have different types in your array</li>\n<li>You are not sure whether in the future you might extend it to another types</li>\n<li>You are working with objects that have an inheritance pattern</li>\n<li>You are working with an array of strings - almost in any occasion it is preferable to <em>char(n,m)</em></li>\n<li>You have a large array, and you often update a single element in a function - Due to Matlabs <em>copy-on-write</em> policy</li>\n<li>You are working with function handles (as @Pursuit explained)</li>\n</ul>\n\n<p>Prefer <strong>regular array</strong> when:</p>\n\n<ul>\n<li>All of the elements have the same type</li>\n<li>You are updating the whole array in one shot - like mathematical operations.</li>\n<li>You want to have type safety</li>\n<li>You will not change the data type of the array in the future</li>\n<li>You are working with mathematical matrices.</li>\n<li>You are working with objects that have no inheritance</li>\n</ul>\n\n<hr>\n\n<p>More explanation about <em>copy-on-write</em>:  </p>\n\n<p>When you pass an array to a function, a pointer/reference is passed. </p>\n\n<pre><code>function foo(x)\n     disp(x);\nend\n\nx= [1 2 3 4 5];\nfoo(x); %No copy is done here! A pointer is passed.\n</code></pre>\n\n<p>But when you change it (or a part of it), a copy is created. </p>\n\n<pre><code>function foo(x)\n    x(4) = x(4) + 1;\nend\n\nx= [1 2 3 4 5];\nfoo(x); %x is being copied! At least twice memory amount is needed.\n</code></pre>\n\n<p>In a cell array, only the cell is copied. </p>\n\n<pre><code>function foo(x)\n   x{4} = x{4} + 1;\nend\n\nx= {1 2 3 4 5}; %Only x{4} will be copied\n</code></pre>\n\n<p>Thus, if you call a function that changes a single element on a large array, you are making a lot of copies - that makes it slower. But in a cell array, it is not the case.</p>\n"
+        "title": "When to use array and when to use cell array?",
+        "body": "<p>In Matlab, I was trying to put anonymous functions in an array:</p>\n\n<pre><code>&gt;&gt; a=[@(k)0.1/(k+1)    @(k)0.1/(k+1)^0.501]\n??? Error using ==&gt; horzcat\nNonscalar arrays of function handles are not allowed; use cell arrays\ninstead.\n</code></pre>\n\n<p>So I wonder what kinds of elements are allowed in an array, and in a cell array?</p>\n\n<p>For example, I know that in an array, the elements can be numerical or strings. What else?</p>\n"
     },
     {
-        "score": 5,
-        "answer_id": 4654753,
-        "question_id": 4654682,
-        "body": "<p>You appear to have the closing bracket <code>]</code> for the format string in the wrong place. Try this:</p>\n\n<pre><code>fprintf(['# True Positive: %d \\n',...\n         '# False Positive: %d \\n',...\n         '# True Negative: %d \\n',...\n         '# False Negative: %d \\n'],...  %# Moved it to here...\n         numTruePos,...\n         numFalsePos,...\n         numTrueNeg,...\n         numFalseNeg);  %# ... from here\n</code></pre>\n"
-    },
-    {
-        "score": 5,
-        "answer_id": 12706728,
+        "tags": [
+            "matlab",
+            "pca"
+        ],
+        "creation_date": 1349212492,
         "question_id": 12698433,
-        "body": "<p><strong>Solution based on Eigen Decomposition</strong></p>\n\n<p>You can first compute PCA on <code>X'X</code> as @david said. Specifically, see the script below:</p>\n\n<pre><code>sz = [329150 132];\nX = rand(sz);\n\n[V D] = eig(X.' * X);\n</code></pre>\n\n<p>Actually, <code>V</code> holds the right singular vectors, and it holds the principal vectors if you put your data vectors in rows. The eigenvalues, <code>D</code>, are the variances among each direction. The singular vectors, which are the standard deviations, are computed as the square root of the variances: </p>\n\n<pre><code>S = sqrt(D);\n</code></pre>\n\n<p>Then, the left singular vectors, <code>U</code>, are computed using the formula <code>X = USV'</code>. Note that <code>U</code> refers to the principal components if your data vectors are in columns.</p>\n\n<pre><code>U = X*V*S^(-1);\n</code></pre>\n\n<p>Let us reconstruct the original data matrix and see the L2 reconstruction error:</p>\n\n<pre><code>X2 = U*S*V';\nL2ReconstructionError = norm(X(:)-X2(:))\n</code></pre>\n\n<p>It is almost zero:</p>\n\n<pre><code>L2ReconstructionError =\n  6.5143e-012\n</code></pre>\n\n<p>If your data vectors are in columns and you want to convert your data into eigenspace coefficients, you should do <code>U.'*X</code>.</p>\n\n<p>This code snippet takes around 3 seconds in my moderate 64-bit desktop.</p>\n\n<p><strong>Solution based on Randomized PCA</strong></p>\n\n<p>Alternatively, you can use a faster approximate method which is based on randomized PCA. Please see <a href=\"https://stats.stackexchange.com/a/11934/5025\">my answer in Cross Validated</a>. You can directly compute <code>fsvd</code> and get <code>U</code> and <code>V</code> instead of using <code>eig</code>.</p>\n\n<p>You may employ randomized PCA if the data size is too big. But, I think the previous way is sufficient for the size you gave.</p>\n"
+        "title": "Matlab - how to compute PCA on a huge data set",
+        "body": "<blockquote>\n  <p><strong>Possible Duplicate:</strong><br>\n  <a href=\"https://stackoverflow.com/questions/3181593/matlab-is-running-out-of-memory-but-it-should-not-be\">MATLAB is running out of memory but it should not be</a>  </p>\n</blockquote>\n\n\n\n<p>I want to perform PCA analysis on a huge data set of points. To be more specific, I have <code>size(dataPoints) = [329150 132]</code> where <code>328150</code> is the number of data points and <code>132</code> are the number of features.</p>\n\n<p>I want to extract the eigenvectors and their corresponding eigenvalues so that I can perform PCA reconstruction.</p>\n\n<p>However, when I am using the <code>princomp</code> function (i.e. <code>[eigenVectors projectedData eigenValues] = princomp(dataPoints);</code> I obtain the following error :</p>\n\n<pre><code>&gt;&gt; [eigenVectors projectedData eigenValues] = princomp(pointsData);\nError using svd\nOut of memory. Type HELP MEMORY for your options.\n\nError in princomp (line 86)\n[U,sigma,coeff] = svd(x0,econFlag); % put in 1/sqrt(n-1) later\n</code></pre>\n\n<p>However, if I am using a smaller data set, I have no problem.</p>\n\n<p>How can I perform PCA on my whole dataset in Matlab? Have someone encountered this problem?</p>\n\n<p><strong>Edit</strong>:</p>\n\n<p>I have modified the <code>princomp</code> function and tried to use <code>svds</code> instead of <code>svd</code>, but however, I am obtaining pretty much the same error. I have dropped the error bellow : </p>\n\n<pre><code>Error using horzcat\nOut of memory. Type HELP MEMORY for your options.\n\nError in svds (line 65)\nB = [sparse(m,m) A; A' sparse(n,n)];\n\nError in princomp (line 86)\n[U,sigma,coeff] = svds(x0,econFlag); % put in 1/sqrt(n-1) later\n</code></pre>\n"
     },
     {
-        "score": 5,
-        "answer_id": 17655380,
+        "tags": [
+            "matlab",
+            "machine-learning",
+            "neural-network"
+        ],
+        "creation_date": 1393275979,
+        "question_id": 21998987,
+        "title": "Programming a Basic Neural Network from scratch in MATLAB",
+        "body": "<p>I have asked a few questions about neural networks on this website in the past and have gotten great answers, but I am still struggling to implement one for myself. This is quite a long question, but I am hoping that it will serve as a guide for other people creating their own basic neural networks in MATLAB, so it should be worth it.</p>\n\n<p>What I have done so far could be completely wrong. I am following the online stanford machine learning course by Professor Andrew Y. Ng and have tried to implement what he has taught to the best of my ability.</p>\n\n<p>Can you please tell me if the feed forward and cost function parts of my code are correct, and where I am going wrong in the minimization (optimization) part?</p>\n\n<p>I have a feed 2 layer feed forward neural network.</p>\n\n<p><strong>The MATLAB code for the feedforward part is:</strong></p>\n\n<pre><code>function [ Y ] = feedforward2( X,W1,W2)\n%This takes a row vector of inputs into the neural net with weight matrices W1 and W2 and returns a row vector of the outputs from the neural net\n\n%Remember X, Y, and A can be vectors, and W1 and W2 Matrices \n\nX=transpose(X);            %X needs to be a column vector\nA = sigmf(W1*X,[1 0]);     %Values of the first hidden layer  \nY = sigmf(W2*A,[1 0]);     %Output Values of the network\nY = transpose(Y);          %Y needs to be a column vector\n</code></pre>\n\n<p>So for example a two layer neural net with two inputs and two outputs would look a bit like this:</p>\n\n<pre><code>      a1\nx1 o--o--o y1      (all weights equal 1)\n    \\/ \\/\n    /\\ /\\\nx2 o--o--o y2\n      a2\n</code></pre>\n\n<p>if we put in:</p>\n\n<pre><code>X=[2,3];\nW1=ones(2,2);\nW2=ones(2,2);\n\nY = feedforward2(X,W1,W2)\n</code></pre>\n\n<p>we get the the output:</p>\n\n<pre><code>Y = [0.5,0.5]\n</code></pre>\n\n<p>This represents the y1 and y2 values shown in the drawing of the neural net</p>\n\n<p><strong>The MATLAB code for the squared error cost function is:</strong></p>\n\n<pre><code>function [ C ] = cost( W1,W2,Xtrain,Ytrain )\n%This gives a value seeing how close W1 and W2 are to giving a network that represents the Xtrain and Ytrain data\n%It uses the squared error cost function\n%The closer the cost is to zero, the better these particular weights are at giving a network that represents the training data\n%If the cost is zero, the weights give a network that when the Xtrain data is put in, The Ytrain data comes out\n\nM = size(Xtrain,1);  %Number of training examples\n\noldsum = 0;\n\nfor i = 1:M,\n        H = feedforward2(Xtrain,W1,W2); \n        temp = ( H(i) - Ytrain(i) )^2;\n        Sum = temp + oldsum;\n        oldsum = Sum;\nend\n\nC = (1/2*M) * Sum;\n\nend\n</code></pre>\n\n<p><strong>Example</strong></p>\n\n<p>So for example if the training data is:</p>\n\n<pre><code>Xtrain =[0,0;        Ytrain=[0/57;\n        1,2;           3/57;\n        4,1;           5/57;\n        5,2;           7/57;                                                           a1    \n        3,4;           7/57;    %This will be for a two input one output network  x1 o--o y1\n        5,3;           8/57;                                                          \\/ \\_o \n        1,5;           6/57;                                                          /\\ /\n        6,2;           8/57;                                                      x2 o--o      \n        2,1;           3/57;                                                           a2    \n        5,5;]          10/57;]\n</code></pre>\n\n<p>We start with initial random weights</p>\n\n<pre><code>W1=[2,3;     W2=[3,2]\n    4,1]\n</code></pre>\n\n<p>If we put in:</p>\n\n<pre><code>Y= feedforward2([6,2],W1,W2)\n</code></pre>\n\n<p>We get</p>\n\n<pre><code>Y = 0.9933 \n</code></pre>\n\n<p>Which is far from what the training data says it should be (8/57 = 0.1404). So the initial random weights W1 and W2 where a bad guess.</p>\n\n<p>To measure exactly how bad/good a guess the random weights weights are we use the cost function:</p>\n\n<pre><code>C= cost(W1,W2,Xtrain,Ytrain)\n</code></pre>\n\n<p>This gives the value:</p>\n\n<pre><code>C = 6.6031e+003\n</code></pre>\n\n<p><strong>Minimizing the cost function</strong></p>\n\n<p>If we minimize the cost function by searching all of the possible variables W1 and W2 and then picking the lowest, this will give the network that best approximates the training data</p>\n\n<p>But when I Use the code:</p>\n\n<pre><code> [W1,W2]=fminsearch(cost(W1,W2,Xtrain,Ytrain),[W1,W2])\n</code></pre>\n\n<p>It gives an error message. It says: \"Error using horzcat. CAT arguments dimensions are not consistent.\"Why am I getting this error and what can I do to fix it?</p>\n\n<hr>\n\n<p>Can you please tell me if the feed forward and cost function parts of my code are correct, and where I am going wrong in the minimization (optimization) part?</p>\n\n<p>Thank you!!!</p>\n"
+    },
+    {
+        "tags": [
+            "matlab",
+            "function-handle"
+        ],
+        "creation_date": 1346670952,
+        "question_id": 12246748,
+        "title": "Function handle error in matlab",
+        "body": "<p>I want to call function handle <code>model_jacobian</code>, but i get  \"Error using ==> horzcat\nCAT arguments dimensions are not consistent.\". When i pick function that leaves both <code>a</code> and <code>d</code> coefs in jacobian, everything works fine. </p>\n\n<pre><code>syms a d x;  \nsyms_function = a*x+d;                                                    \nmodel_jacobian = matlabFunction(jacobian(syms_function, [a d]), 'vars', {[a d], x});\nJ = model_jacobian([1 1], [1 2 3 4 5 6 7 8 9]');\n</code></pre>\n\n<p>So how to call function handle with arguments despite the fact that they are not used there?</p>\n"
+    },
+    {
+        "tags": [
+            "arrays",
+            "matlab",
+            "csv",
+            "cell",
+            "textscan"
+        ],
+        "creation_date": 1373891888,
         "question_id": 17654452,
-        "body": "<p>As you have an array containing both numeric and character data, what you want is impossible (and trust me, it would be impractical, too). </p>\n\n<p>Referencing individual numbers in a numeric array is different from referencing whole strings. There is simply no escaping that, nor should there be: you treat flowers differently from how you treat people (I sure hope so anyway). </p>\n\n<p>In MATLAB, a string is an ordinary array, with the difference that each entry of the array does not represent a number, but a character. Referencing individual characters goes the same as referencing numbers in arrays: </p>\n\n<pre><code>&gt;&gt; a = 'my string'\n&gt;&gt; a(4)\nans = \ns\n&gt;&gt; a+0  % cast to double to show the \"true character\" of strings\nans =\n    109   121    32   115   116   114   105   110   103\n</code></pre>\n\n<p>However, <code>textscan</code> assumes (rightfully so) that you don't want to do <em>that</em>, but rather you want to extract <em>whole strings</em> from the file. And whole strings should be referenced differently, to indicate that you mean whole strings and not individual characters. </p>\n\n<p>I think you'll find it all a bit more intuitive if you split the results from <code>textscan</code> up into an ordinary numeric array and a cell array of strings, like so: </p>\n\n<pre><code>% load the data\nftest = fopen('test.csv');\nC = textscan(ftest,...\n    '%f %s %f %f %f %f %f %f %s %s %f %f',...     \n    'collectoutput', true,...\n    'Delimiter',',\\n');\nfclose(ftest);\n\n% split into numeric and char arrays\nnumeric = [C{[1 3 5]}]\nalpha   = [C{[2 4]}]\n</code></pre>\n\n<p>Referencing data in <code>numeric</code> then follows the same rules as any ordinary array, and referencing the strings in <code>alpha</code> then follows the normal cell-referencing rules (as in <code>alpha{2,1}</code> to get <code>'03/05/1986'</code>)</p>\n\n<p><strong>EDIT</strong> Based no your comments, you want to do the conversion like this: </p>\n\n<pre><code>% Read the data\nfid = fopen('test.csv', 'r');\nC = textscan(fid,...\n    '%f %s %f %f %f %f %f %f %s %s %f %f',...\n    'Headerlines', 1,...\n    'Delimiter',',');\nfclose(fid);\n\n% Delete 10th element ('ASC')\nC(10) = [];\n\n% Mass-convert dates to datenums\nC{2} = datenum(C{2}, 'dd/mm/yyyy');\n\n% Map 'P' to 1 and 'C' to 2\nmap('PC') = [1 2];\nC{9} = map([C{9}{:}]).';\n\n% Convert whole array to numeric array\nC = [C{:}];\n</code></pre>\n"
+        "title": "MATLAB: Using textscan and converting cell array in matrix",
+        "body": "<p>I have a large csv file (should be around 1 million lines) with option data with the following structure (content is altered):</p>\n\n<pre><code>secid, date, days, delta, impl_volatility, impl_strike, impl_premium, dispersion, cp_flag, ticker, index_flag, industry_group\n100000, 02/05/1986, 60, -80, 0.270556, 74.2511, 5.2415, 0.021514, C, ASC, 0, 481\n100000, 03/05/1986, 30, -40, 0.251556, 74.2571, 6.2415, 0.025524, P, ASC, 0, 481\n</code></pre>\n\n<p>I have successfully imported a test file using the following:</p>\n\n<pre><code>ftest = fopen('test.csv');\nC = textscan(ftest,'%f %s %f %f %f %f %f %f %s %s %f %f','Headerlines',1,'Delimiter',',');\nfclose(ftest);\n</code></pre>\n\n<p>However, C is a cell array and this makes it harder to handle the contents of the file in matlab. It would be easier to have it as a \"regular\" array (pardon me for not knowing the correct nomenclature, I just started working with matlab).</p>\n\n<p>If I output C, I get:</p>\n\n<pre><code>Columns 1 through 6\n[2x1 double]    {2x1 cell}    [2x1 double]    [2x1 double]    [2x1 double]    [2x1 double]\nColumns 7 through 12\n[2x1 double]    [2x1 double]    {2x1 cell}    {2x1 cell}    [2x1 double]    [2x1 double]\n</code></pre>\n\n<p>So inside the cell array which is C, there are arrays and cell arrays - arrays for numbers and cell arrays for strings. If I try to check element (1,2), I have to use C{1}(2) but if I want to check element (2,2) I have to use C{2}{2}. Ideally, I would like to access both as C(1,2) and C(2,2).\nThe question is, how do I do this?</p>\n\n<p>I have searched for solutions and found cells2mat but it only works if all content is numeric (I think). I found this solution: <a href=\"https://stackoverflow.com/questions/13540418/convert-cell-array-of-cell-arrays-to-matrix-of-matrices\">Convert cell array of cell arrays to matrix of matrices</a> but horzcat retrieves an error, which I believe may occurr due to the same problem.</p>\n\n<p>Thank you in advance for your time.</p>\n"
     },
     {
-        "score": 4,
-        "answer_id": 2492666,
-        "question_id": 2492646,
-        "body": "<p>never mind, I figured it out, you have to use the <code>char()</code> method explicitly:</p>\n\n<pre><code>K&gt;&gt; ['my name is ' char(name)]\n\nans =\n\nmy name is Jason\n</code></pre>\n"
+        "tags": [
+            "matlab"
+        ],
+        "creation_date": 1294725700,
+        "question_id": 4654682,
+        "title": "How do I get multiline console output in MATLAB? Using horzcat gives me an error",
+        "body": "<pre><code>fprintf(['# True Positive: %d \\n',...\n            '# False Positive: %d \\n',...\n            '# True Negative: %d \\n',...\n            '# False Negative: %d \\n,',...\n            numTruePos,...\n            numFalsePos,...\n            numTrueNeg,...\n            numFalseNeg]);\n</code></pre>\n\n<p>but then I get the error:</p>\n\n<pre><code>??? Error using ==&gt; horzcat\nThe following error occurred converting from logical to\nchar:\nError using ==&gt; char\nConversion to char from logical is not possible.\n\nError in ==&gt; toyProblem at 40\nfprintf(['# True Positive: %d \\n',...\n</code></pre>\n"
     },
     {
-        "score": 4,
-        "answer_id": 2493747,
-        "question_id": 2492646,
-        "body": "<p>As an alternative to using <code>char()</code> you can also use the java string methods. So</p>\n\n<pre><code>cName = name.toCharArray()'\n</code></pre>\n\n<p>Will return a MATLAB character array.</p>\n"
+        "tags": [
+            "matlab",
+            "textscan"
+        ],
+        "creation_date": 1351458804,
+        "question_id": 13113077,
+        "title": "Matlab textscan gone wrong: cellfun to select data from certain lines",
+        "body": "<p>Hi I am using the following code to read some values from lines containing 'GPGGA' from data.txt</p>\n\n<pre><code>fid = fopen('D:\\data.txt','r');\nA=textscan(fid,'%s %*s %f %s %f %s %*s %*s %*s %*s %*s %*s %*s %*s %*s,'Delimiter',',');\nfclose(fid);\nLoc = [A{[2, 4]}];\nrow_idxs = cellfun( @(s) strcmp(s, '$GPGGA'), A{1});\nLoc = Loc(row_idxs, :);\ndisplay(Loc);\n</code></pre>\n\n<p>The code works perfectly if the last line in data.txt is deleted. Not sure why it throws this error when the last line is included in the text file. What is the reason? I'm confused!</p>\n\n<p>\"??? Error using ==> horzcat\nCAT arguments dimensions are not consistent.\nError in ==> test at 4\nLoc = [A{[2, 4]}];\"</p>\n\n<p>data.txt</p>\n\n<pre><code>$GPGSV,4,1,16,05,15,046,23,29,47,071,21,16,31,291,18,31,39,202,18*73\n$GPGSV,4,1,16,05,15,046,23,29,47,071,21,16,31,291,18,31,39,202,18*73\n$GPGSV,4,1,16,05,15,046,23,29,47,071,21,16,31,291,18,31,39,202,18*73\n$GPGSV,4,1,16,05,15,046,23,29,47,071,21,16,31,291,18,31,39,202,18*73\n$GPGSV,4,2,16,23,13,298,17,25,15,119,17,06,22,247,16,03,04,251,14*75\n$GPGSV,4,2,16,23,13,298,17,25,15,119,17,06,22,247,16,03,04,251,14*75\n$GPGSV,4,2,16,23,13,298,17,25,15,119,17,06,22,247,16,03,04,251,14*75\n$GPGSV,4,2,16,23,13,298,17,25,15,119,17,06,22,247,16,03,04,251,14*75\n\n$GPGGA,1.8,98.90,S,18.0014,E,1,04,1.0,87.8,M,48.0,M,,*76\n$GPGGA,1.3,98.91,S,18.0015,E,1,04,1.0,100.7,M,48.0,M,,*40\n$GPGGA,1.3,98.92,S,18.0016,E,1,04,1.0,105.4,M,48.0,M,,*4F\n$GPGGA,1.8,98.93,S,18.0017,E,1,04,1.0,87.8,M,48.0,M,,*76\n$GPGGA,1.8,98.94,S,18.0018,E,1,04,1.0,87.8,M,48.0,M,,*76\n$GPGSV,4,4,16,27,,,,26,,,,24,,,,22,,,*79\n</code></pre>\n"
     },
     {
-        "score": 4,
-        "answer_id": 13575932,
+        "tags": [
+            "matlab",
+            "octave"
+        ],
+        "creation_date": 1353976091,
         "question_id": 13575523,
-        "body": "<p>You can use array fun, followed by another max to do this:</p>\n\n<pre><code>s.x = [1 3 4];\ns(2).x = [9 8];\ns(3).x = [1];\n\nmaxVals = arrayfun(@(struct)max(struct.x(:)),s);\n\nmaxMaxVals = max(maxVals(:));\n</code></pre>\n\n<p>Or, if you want to retain the size of .x after MAX:</p>\n\n<pre><code>s.x = [1 3 4];\ns(2).x = [9 8 3];\ns(3).x = [1 2 2; 3 2 3];\n\nmaxVals = arrayfun(@(struct)max(struct.x,[],1),s,'uniformoutput',false);\n\nmaxMaxVals = max(cat(1,maxVals{:}))\n</code></pre>\n\n<p>Or, if you know everything is n x 3</p>\n\n<pre><code>s.x = [1 3 4];\ns(2).x = [9 8 3];\ns(3).x = [1 2 2; 3 2 3];\nmatrix = cat(1,s.x)\nmaxVals = max(matrix)\n</code></pre>\n"
+        "title": "MATLAB finding max. of a struct",
+        "body": "<p>I am trying to find max value of a struct but <code>max([tracks(:).matrix])</code> does not work. It gives me the following error: \"Error using horzcat\nCAT arguments dimensions are not consistent.\" Do you have an idea?</p>\n\n<p>Here is what my struct looks like:</p>\n\n<pre><code>tracks = \n\n1x110470 struct array with fields:\n    nPoints\n    matrix\n</code></pre>\n\n<p>tracks.matrix includes 3D points. For example here is </p>\n\n<pre><code>tracks(1,2).matrix:\n\n33.727467   96.522331   27.964357\n31.765503   95.983849   28.984663\n30.677082   95.989578   29\n</code></pre>\n"
     },
     {
-        "score": 3,
-        "answer_id": 9684949,
-        "question_id": 9683646,
-        "body": "<p>Function handles are actually the exception here, and the reason is that the Matlab syntax becomes surprising if you allow function handles to be a part of non-cell array.  For example</p>\n\n<pre><code>a = @(x)x+1;\na(2);  %This returns 2\n</code></pre>\n\n<p>But, if arrays of function handles were supported, then</p>\n\n<pre><code>b = [@(x)x+1,  @(x)x+2];\nb(2);                  %This would return @(x)x+2\nb(3) = @(x)x+3;        %This would extend the size of the array\n</code></pre>\n\n<p>So then would this be allowed?</p>\n\n<pre><code>a(2) = @(x)x+2;       %Would this extend the size of the previously scalar array\n</code></pre>\n\n<hr>\n\n<p>Longwinded edit:  This is documented in the <a href=\"http://www.mathworks.com/help/releases/R14/techdoc/rn/prog_upg.html#1000121\" rel=\"nofollow\">release notes accompanying release R14</a>, which was the first release allowing anonymous functions.  Prior to R14 you could create function handles as references to m-file functions, and they could be placed in non-cell arrays.  These could only be called using <code>feval</code> (e.g.:  <code>fnSin = @sin;  output = feval(fnSin, pi)</code>).  </p>\n\n<p>When anonymous functions were introduced, the Mathworks updated the syntax to allow a simpler calling convention (e.g.  <code>fnSin = @sin;  output = fnSin(pi)</code>) which had the effect of causing an ambiguity when using non-cell array of function handles.  It looks like they did their best to grandfather this new behavior in, but those grandfathered conditions have certainly expired (this was 2004).</p>\n"
-    },
-    {
-        "score": 2,
-        "answer_id": 9685870,
-        "question_id": 9683646,
-        "body": "<p>The arrays can store only data with a fixed length. For instance, double, single, char, logical, integer.\nThe reason is that (I guess) they are stored directly in a block of memory. On the other hand cells are stored as a list of pointers, each pointer can point to a data of different size.</p>\n\n<p>That's why arrays cannot store strings, function handle, arrays, and multiple data types.\nThose type can have different length. For instance 'bla' has 3 bytes, 'blabla' has 6 bytes. Therefore if they are stored in the same memory block, if you want to change 'bla' into 'blabla' you would have to shift all the rest of the memory, which would be very slow, and so it's not handled.</p>\n"
+        "tags": [
+            "matlab",
+            "bsxfun"
+        ],
+        "creation_date": 1386603710,
+        "question_id": 20474578,
+        "title": "bsxfun: Dimensions of matrices being concatenated are not consistent",
+        "body": "<p>Any one knows where the error is? Many thanks!</p>\n\n<pre><code>beta=randn(50,1);\nbsxfun(@(x1,x2) max([x1 x2 x1+x2]), beta, beta')\n</code></pre>\n\n<p>error message:</p>\n\n<blockquote>\n  <p>Error using horzcat<br>\n  Dimensions of matrices being concatenated are not consistent.<br>\n  Error in @(x1,x2)max([x1,x2,x1+x2])</p>\n</blockquote>\n"
     }
 ]

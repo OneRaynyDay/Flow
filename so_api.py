@@ -9,8 +9,10 @@ Usage:
     qres = api.query_questions("Error using horzcat", pagesize=10)
     ares = api.query_answers([str(d["question_id"]) for d in res], pagesize=10)
 """
-import requests
 import json
+import os
+import requests
+import sys
 
 from urllib.parse import urljoin
 
@@ -23,7 +25,7 @@ REQUIRED_FIELDS = ['version', 'site', 'base_url', 'question_fields']
 class SOApi:
     def __init__(self, configfile="config.json"):
         try:
-            with open(__file__configfile, "r") as f:
+            with open(os.path.join(os.path.dirname(__file__), configfile), "r") as f:
                 self.__dict__ = json.load(f)
         except OSError as e:
             raise ValueError("Could not read {}. Encountered error {}."
@@ -50,6 +52,7 @@ class SOApi:
                 'sort' : sort,
                 'filter' : filter}
         payload.update(kwargs)
+        print(payload)
         r = requests.get(urljoin(self.api_url, "search/advanced"),
                 params=payload)
         r.raise_for_status()
@@ -80,4 +83,5 @@ class SOApi:
 if __name__ == "__main__":
     api = SOApi()
     qres = api.query_questions("Error using horzcat", pagesize=10)
-    print(qres)
+    with open("response.json", "w") as f:
+        json.dump(qres, f, indent=4)
